@@ -1,7 +1,7 @@
 # V1.11
 # Add -I to ignore ssh host key
 # Some code modified to check CYGWIN platform
-# New way to load tclx without specify the path :-)- Changed sent end-of-lines to r.
+# New way to load tclx without specify the path :-)
 
 # V1.10
 # defunc trap added for cygwin
