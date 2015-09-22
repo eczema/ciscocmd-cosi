@@ -1,0 +1,65 @@
+# V1.11
+# Add -I to ignore ssh host key
+# Some code modified to check CYGWIN platform
+# New way to load tclx without specify the path :-)- Changed sent end-of-lines to r.
+
+# V1.10
+# defunc trap added for cygwin
+# Merge code from Octavio Alvarez
+# Implemented by Octavio Alvarez [alvarezp@alvarezp.ods.org])
+# -- Added support for PIX/ASA terminal pager.
+# -- Disconnect and return with an error code if login is invalid.
+# -- Forced terminal width to 80 and added an override option.
+# -- If the line with the # sign has spaces, it is not a prompt.
+# -- Allow devices which only ask for "User" as opposed to "Username".
+# -- Changed sent end-of-lines to r.
+# -- Added support for WLC terminal pager.
+# -- Added support for empty prompts for "banner login" support.
+# -- Added support for Small Business "terminal datadump".
+
+# V1.9
+# New option to use ENV VARS to set user password and secret
+
+
+# V1.8
+# Some fixes
+
+# V1.7
+-Hugly hack for cygwin defunc
+
+# V1.6
+- Better connection failed handling
+- Better waitprompt routine
+
+# V1.5c
+- Add -f --force switch to support the "go on to next host" function
+   when connection to host fails
+      (implemented by Martin Hagmann [nisecs@bluewin.ch])
+- Add --sshopts
+
+# Version 1.4
+
+- Fix ssh username usage
+
+# Version 1.3
+
+- Add -Y --ssh for ssh support
+- Add pix support bugfix ( expect #<space>$  instead of #$ ) 
+
+# Version 1.2
+
+- Add -w --wait sitch to define timeout
+- Fix exit in forking mechanism
+	( Thanks to Nicola [nicola.novello@gmail.com] )
+# Version 1.1
+
+
+- Added support for cygwin
+- Fix login with username
+- Add Catalyst support
+
+
+
+# Version 1.O
+
+Initial release

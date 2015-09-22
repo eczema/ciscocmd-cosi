@@ -1,0 +1,176 @@
+Introduction:
+-------------
+
+ciscocmd is a Tcl/Expect script.
+With this tool, you can send a set of command to a large number of ios target hosts and get a separated report for each node.
+I wrote this little tool to assists me when I must manage a lot of cisco switch for the same reason like find specific parameters under specific circumstances
+like how is defined a QOS policy on interface where a lot of packets are dropped..
+
+Usage:
+------
+
+
+ciscoscmd [OPTION]...
+
+ -h --help display this help message.
+ -u --username <username>			define the username password.
+ -p --password <password>		 	define the telnet password.
+ -s --secretpassword <enable password>		define the enable secret password.
+ -t --target <host>				define the hostname to connect.
+ -T --targetfile <file>				define a target file (one host per line)
+ -c --cmd <cmd>					define the command to send.
+ -C --cachecred					use cache credentials $CISCOUSR $CISCOPW $CISCOSEC 
+ -e --enable					set mode enable.
+ -r --runfile <file>				define a file with a set of command to send.
+ -l --log <file prefix>				define a logfile prefix
+ -a --append					log will be appended to existing file
+ -P --prefix					add the host prefix to each line
+ -m --maxfork <number>				define maximum forked process
+ -w --wait <seconds>				define max wait time for the next prompt
+ -b --batchfile <file>				define a batch file to process ciscocmd output
+						All ciscocmd output will be piped to this batch
+ -Y|--ssh					Use ssh protocol to connect remote equipement
+ --sshopts					set ssh specific option
+ -I --ignrorekey				ignore host key for ssh protocol
+ -f --force					force connection to next host if one connection fails
+ -d --debug <file>				define a debug file name
+ -A --asa					use ASA pager command: terminal pager 0
+ -W --wlc					use WLC pager command: config paging disable
+ -D --datadump					use Small Business pager command: terminal datadump 0
+ -z --width <chars>				set terminal width (not for ASA)
+ -q --quiet					set program very quiet
+
+
+
+-h --help		Print a quick help. 
+
+-u --username 		When your target use authentication new-model, a username is required to logon.
+			This option must be used to specify the username. The script will expect "ername" prompt
+			before sending the username.
+			ex: -u john
+
+-s --secretpassword	When you need to be in enable mode, you must specify the enable password. 
+  			ex: -s enablepassword
+
+-t --target		This option defines a target or a list of target for the script.
+			If you define a list, you must separate each host with a comma.
+			ex: -t myrouteur,myswitch
+
+-T --targetfile		This option defines a list where target are listed. On each line, one target must be written,
+			no more, no less.
+			ex: -T hostlist.txt
+	
+-c --cmd		With this flag, you can pass the ios command to execute. Don't forget to use quote !!!
+			ex: -c "show version"
+
+-C --cachecred		This flag will use environment variables CISCOUSR as user, CISCOPW as password and CISCOCEC as secret.
+
+-e --enable		This flag turn enable mode on. If you use -s, this parameter is useless.
+
+-r --runfile		This parameter let you specify a file containing a set of command to enter on your target
+			ex: -r command.ios.txt 
+
+-l --log		This option  is used to define a prefix for logging the output of ciscocmd script. Each target,
+			will produce a logfile <targetname>.txt ( in forking mode ) but you may prefer to precede the filename with a custom a keyword 
+			to this name like a date or anything else.
+			ex: -l version-request. 
+
+-a --append		This parameter must be used if you want to append log instead of replacing old log files.
+
+-P --prefix		This option permit to add the target in the beginning of each line of the script's output.
+
+-m --maxfork		The default value is 4. You can if your machine is able to support more processing choose
+			a greater value like 10, 30 or more on a supercomputer..
+			ex: -m 10
+
+-b --batchfile		This parameter let you specify a custom script that will get as standard input 
+			the result of the ciscocmd script. Additionally, the $CISCOHOST environmental 
+			variable can be accessed by your script. CISCOHOST will give you the current target.
+
+-z --width		This will force the width to the specified value. Default value: 80.
+
+-d --debug		This option will produce a expect debug output in a file. If more than one target is
+			given, each target will produce a file <debugfilename>.target.debug
+			ex: -d mydebug
+
+-w --wait		This option define the maximum time in seconds to wait after each command during processing.
+
+-q --quiet		Be very quite and do not send any information on standard output.
+
+-A --asa		Use this option to use ASA's pager command: "terminal pager 0" instead of "terminal length 0".
+
+-W --wlc		Use this option to use WLC's pager command: "config paging disable" instead of "terminal length 0".
+
+-Y --ssh		This option will use ssh instead of telnet protocol to connect remote target(s)
+
+--sshopts <sshopts>	This option permit to add specific ssh options 
+			ex: --sshopts "-2"
+
+-I --ignorekey		This command wil add ssh opion to ignore host key
+
+-f --forcenext		This option force connection to next host if one connection fails
+
+
+
+Example:
+--------
+
+
+This tool can be used to retrieve information, put configuration. 
+
+Another powerful option is the ability to pipe each node output to your custom script. For example, 
+
+I suppose you need to check the configuration of all interfaces where you detect more than 1 reset and on a hundreds of nodes... 
+
+- Prepare a file with your hosts ( on per line ) and save it as mynodes.txt
+- Prepare a batch file to pipe your output command and save it as "mybatch" :
+
+
+--------------------------mybatch-------------------------------
+#!/bin/sh
+#
+#mybatch
+
+while read line
+        do echo "$line" | grep -q "line protocol" && IF=$(echo $line | awk '{print  $1}') 
+                echo "$line" | grep -q "reset" && (
+                        ERROR=$(echo $line | sed -e 's/.*output.*, //g' -e 's/ interface resets.*//g')
+                        if [ $ERROR -gt 1 ]
+                                then
+                                echo
+                                echo "$IF have $ERROR resets !"
+                                ./ciscocmd -t $CISCOHOST -p <password> -s <password> -c "sh run int $IF"
+                        fi
+                )
+done
+
+----------------------------------------------------------------
+
+- launch 
+	ciscocmd -T mynodes.txt -p <password> -s <enablepassword> -b ./mybatch -c "sh int"
+
+
+you will have a hundred of text file ( one per node with the result of "sh run int" for all interfaces with more than one reset )
+
+Remarks:
+
+1. This example supposes you don't use authentication new model. If you use it do not forget to use -u <username> with ciscocmd
+2. Another way to do the same thing is to use "include" command from ios and make a shorter mybatch script.
+
+
+Important !!!!!
+
+To use forking mechanism on Unix , you need tclx extension.
+
+ciscocmd will try to load Tclx extension automatically
+
+Final Word:
+-----------
+
+This script is written/distributed under the GPL License Version 2.
+For any comment, contact me at eczema@ecze.com
+
+Alain Degreffe
+
+ 
+

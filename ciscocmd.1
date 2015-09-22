@@ -1,0 +1,243 @@
+.TH "ciscocmd" "1" "1.11" "Alain Degreffe" "Cisco expect Tool script"
+.SH "NAME"
+.LP 
+ciscocmd cisco command processing and reporting tool
+.SH "LICENSE"
+.LP 
+This program is written/distributed under the GPL version 2 License.
+.SH "SYNTAX"
+.LP 
+ciscocmd [\fIoption\fP]
+
+
+.SH "DESCRIPTION"
+.RP ciscocmd is a Tcl/Expect script.
+With this tool, you can send a set of command to a large number of ios target hosts and get a separated report for each node. I Wrote this tool to assist me when I must query a lot of cisco switch in the same way.
+
+Typical usage can be:
+
+ * Searching for port with error
+ * making an inventory of all the static route
+ * backup of all running\-config
+
+Potentially, the output of ios command can be processed by a script to extract revelant information
+
+
+.SH "OPTIONS"
+.LP 
+.TP 
+\fB\-h \-\-help\fR
+display this help message.
+.TP 
+\fB\-u \-\-username\fR <\fIusername\fR>
+define the username password.
+When your target use AAA new\-model, a username is required to logon. This option must be used to specify the username. The script will expect "ername" prompt before sending the username.
+
+ex: \-u john
+.TP 
+\fB\-p \-\-password\fR <\fIpassword\fR>
+define the telnet password.
+.TP 
+\fB\-s \-\-secretpassword\fR <\fIsecret\fR>
+When you need to be in enable mode, you should specify the enable password. this option imply the \fB\-e\fR option.
+
+ex: \-s enablepassword
+.TP 
+\fB\-t \-\-target\fR <\fIhost\fR>
+This option defines a target or a list of target for the script. If you define a list, you must separate each host with a comma.
+
+ex: \-t myrouteur,myswitch,192.168.1.1
+.TP 
+\fB\-T \-\-targetfile\fR <\fIfile\fR>                         
+This option specify the file where targets are listed. On each line, one target must be written, no more, no less.
+
+ex: \-T hostlist.txt
+.TP 
+\fB\-c \-\-cmd\fR <\fIcmd\fR>
+With this flag, you can pass the ios command to execute. Don't forget to use quotes !!!
+
+ex: \-c "show version"
+.TP 
+\fB\-e \-\-enable\fR                                    
+This flag turn enable mode on. If you use \-s, this parameter is implicit. If \-s is not provided, enable secret will be prompted. 
+.TP
+\fB\-C \-\-cachecred\fR
+This flag will use environment variables CISCOUSR as user, CISCOPW as password and CISCOCEC as secret.
+.TP 
+\fB\-r \-\-runfile\fR <\fIfile\fR
+This option specify a file containing a set of command to enter on your target
+
+ex: \-r command.ios.txt
+.TP 
+\fB\-l \-\-log\fR <\fIfile prefix\fR
+This option  is used to define a prefix for logging the output of ciscocmd script. Each target will produce a logfile <targetname>.txt ( in forking mode ) but you may prefer to precede the filename with a custom a keyword to this name like a date or anything else.
+
+ex: \-l version\-request. 
+.TP 
+\fB\-a \-\-append\fR
+This parameter must be used if you don't want to overwrite logs but prefer to append.
+.TP 
+\fB\-P \-\-prefix\fR                                    
+This option permit to add the targetname in the beginning of each line of the script's output.
+
+ex: \- l will produce "target:" in the begining of each outup line produced by the script.
+.TP 
+\fB\-m \-\-maxfork\fR <\fInumber\fR>                          
+Define maximum forked process. The default value is 4. You can if your machine is able to support more processing choose a greater value like 10, 30 or more on a supercomputer. Use 0 or 1 if you don't want to fork.
+
+ex: \-m 10
+.TP 
+\fB\-w \-\-wait\fR <\fIseconds\fR>
+This option define the maximum time in seconds to wait after each command during the processing.
+.TP 
+\fB\-b \-\-batchfile\fR <\fIfile\fR>                          
+This parameter let you specify a custom script that will get as standard input. The result of the ciscocmd script. Additionally, the $CISCOHOST environmental variable can be accessed by your script. CISCOHOST will give you the current target.
+
+ex: \-b "myscript.sh"
+.TP 
+\fB\-z \-\-width\fR <\fIchars\fR>
+This will force the width to the specified value. Default value: 80.
+.TP 
+\fB\-d \-\-debug\fR <\fIfile\fR>
+This option will produce a expect debug output in a file. If more than one target is given, each target will produce a file <\fIdebugfilename\fR>.ta rget.dbg
+
+ex: \-d mydebug
+.TP 
+\fB\-q \-\-quiet\fR
+Be very quite and do not send any information on standard output.
+
+.TP 
+\fB\-A \-\-asa\fR
+Use this option to use ASA's pager command: "terminal pager 0" instead of "terminal length 0".
+
+.TP 
+\fB\-W \-\-wlc\fR
+Use this option to use WLC's pager command: "config paging disable" instead of "terminal length 0".
+
+.TP 
+\fB\-Y \-\-ssh\fR
+This option will use ssh instead of telnet protocol to connect remote target(s)
+
+.TP 
+\fB\-\-sshopts\fR <\fIsshopts\fR>
+This option permit to add specific ssh options
+
+ex: \-\-sshopts "\-2"
+
+.TP
+\fB\-I \-\-ignorekey\fR 
+Ignore host key for ssh protocol
+
+.TP 
+\fB\-f \-\-forcenext\fR
+This option force connection to next host if one connection fails
+
+
+
+.SH "RETURN CODE"
+If login was invalid it returns 1. In any other case (including success) it returns 0.
+
+
+.SH "EXAMPLES"
+.LP 
+\fB1. A very simple usage\fR
+.br 
+
+quickly get all running\-config:
+
+Prepare a list of target in targets.list file like this:
+
+\-\-\-\-\-\-targets.list\-\-\-\-\-\-\-\-
+.br 
+192.168.1.1
+.br 
+192.168.1.2
+.br 
+myrouteur3
+.br 
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+
+And use:
+
+ciscocmd \-T targets.list \-u mylogin \-p mypassowrd \-s mysecret \-c "sh run"
+
+This will produce a output file for each node.
+
+ls  :
+
+192.168.1.1.txt
+.br 
+192.168.1.2.txt
+.br 
+myrouteur3.txt
+
+.LP 
+\fB2. A advanced usage\fR
+.br 
+
+Suppose you need to check the configuration of all interfaces where you detect more than 1 reset and on a hundreds of nodes... 
+
+\- Prepare a file with your hosts ( on per line ) and save it as mynodes.txt
+\- Prepare a batch file to pipe your output command and save it as "mybatch" :
+
+
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-mybatch\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+.br 
+#!/bin/sh
+.br 
+#
+.br 
+#mybatch
+.br 
+
+while read line
+  do echo "$line" | grep \-q "line protocol" \\
+.br 
+	 && IF=$(echo $line | awk '{print  $1}') 
+     echo "$line" | grep \-q "reset" && (
+       ERROR=$(echo $line | sed \-e 's/.*output.*, //g' \\
+.br 
+	 \-e 's/ interface resets.*//g')
+         if [ $ERROR \-gt 1 ]
+           then
+           echo
+           echo "$IF have $ERROR resets !"
+           ./ciscocmd \-t $CISCOHOST \\
+.br 
+		\-p <password> \-s <password> \\
+.br 
+		\-c "sh run int $IF"
+          fi
+     )
+done
+
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+.br 
+Now, launch:
+ 
+        ciscocmd \-T mynodes.txt \-p <password> \-s <enablepassword> \-b ./mybatch \-c "sh int"
+
+
+you will have a hundred of text file ( one per node with the result of "sh run int" for all interfaces with more than one reset )
+
+Remarks:
+
+1. This example supposes you don't use authentication new model. If you use it do not forget to use \-u <username> with ciscocmd
+2. Another way to do the same thing is to use "include" command from ios and make a shorter mybatch script.
+
+
+Important !!!!!
+
+To use forking mechanism , you need tclx extension. So adjust ciscocmd script according your system.
+try :
+
+find /usr/lib \-name "libtclx*" 
+
+And replace the load libtclxXXX.so in ciscocmd
+
+
+.SH "AUTHORS"
+.LP 
+Alain Degreffe <eczema@ecze.com>
+
+16 August 2005

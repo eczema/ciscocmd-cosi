@@ -1,0 +1,17 @@
+#!/bin/sh
+#
+# mybatch
+
+while read line 
+	do echo "$line" | grep -q "line protocol" && IF=$(echo $line | awk '{print  $1}')
+		echo "$line" | grep -q "reset" && (
+			ERROR=$(echo $line | sed -e 's/.*output.*, //g' -e 's/ interface resets.*//g')
+			if [ $ERROR -gt 1 ] 
+				then 
+				echo
+				echo "$IF have $ERROR resets !"
+				./ciscocmd -t $CISCOHOST -p pass -s secret -c "sh run int $IF"
+			fi
+		)
+done
+

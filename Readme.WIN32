@@ -1,0 +1,11 @@
+This script works under Windows !!!
+
+
+Download cygwin at www.cygwin.com
+
+The minimal set of packages is:
+
+inetutils (needed for telnet)
+expect
+
+For ssh mode, you need also openssl/openssh packages
