@@ -164,6 +164,11 @@ To use forking mechanism on Unix , you need tclx extension.
 
 ciscocmd will try to load Tclx extension automatically
 
+Development url:
+----------------
+
+https://github.com/eczema/ciscocmd-cosi/
+
 Final Word:
 -----------
 
