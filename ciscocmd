@@ -75,7 +75,7 @@
 # New way to load tclx without specify the path :-)
 
 # The next line store the args in memory \
-IFS='µ' ; export ARGS=$@
+IFS='Âµ' ; export ARGS="$*"
 # the next line restarts using expect \
 exec expect  -- "$0" 
 
@@ -85,7 +85,7 @@ log_user 0
 # first: take arguments from environment variable
 
 regsub -all -- "{|}" [lrange [array get env ARGS] 1 end] "" argv
-regsub -all -- "µ" $argv "\" \"" argv
+regsub -all -- "Âµ" $argv "\" \"" argv
 regsub -all -- "^|$" $argv "\"" argv
 
 if { $argv == "" || $argv == "\""} {
