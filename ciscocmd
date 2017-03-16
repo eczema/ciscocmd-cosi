@@ -107,6 +107,7 @@ if { [ regexp {CYGWIN} [array get tcl_platform os]  ] } {
 	trap SIG_IGN SIGCHLD
 	set cyg 1
 }
+
 # Argument processing
 while {[llength $argv] > 0 } {
 	set flag [lindex $argv 0]
@@ -384,7 +385,7 @@ if { [ info exist target ] } {
 		}
 	}
 } else {
-	varcheck hostlist 0
+	varcheck "hostlist" 0
 }
 
 # only one host ??
@@ -571,7 +572,7 @@ foreach host $hostlist {
 			waitprompt
 		}
 	} else {
-		varcheck command 0
+		varcheck "command" 0
 		if {[ catch { send "\r" } ]} { continue }
 		if {[ catch { waitprompt } ]} { continue }
 		if {[ catch { send "$command\r" } ]} { continue }
