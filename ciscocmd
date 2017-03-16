@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env expect
 #
 # ciscocmd expect script
 #
@@ -74,21 +74,11 @@
 # Some code modified to check CYGWIN platform
 # New way to load tclx without specify the path :-)
 
-# The next line store the args in memory \
-IFS='µ' ; export ARGS="$*"
-# the next line restarts using expect \
-exec expect  -- "$0" 
-
 match_max 20
 set FORK 0
 log_user 0
-# first: take arguments from environment variable
 
-regsub -all -- "{|}" [lrange [array get env ARGS] 1 end] "" argv
-regsub -all -- "µ" $argv "\" \"" argv
-regsub -all -- "^|$" $argv "\"" argv
-
-if { $argv == "" || $argv == "\""} {
+if {[llength $argv] == 0} {
 	set argv "-h"
 }
 
@@ -125,10 +115,10 @@ while {[llength $argv] > 0 } {
 		"--help|^-h$"		{
 				send_user "ciscocmd v1.11 written by Alain Degreffe <eczema@ecze.com>\n\n"
 				send_user "Usage: ciscocmd \[OPTION\]...\n"
-				send_user "Send command(s) to cisco host.\n\n" 
+				send_user "Send command(s) to cisco host.\n\n"
 				send_user " -h --help display this help message.\n"
 				send_user " -u --username <username>			define the username password.\n"
-				send_user " -p --password <password>		 	define the telnet password.\n"
+				send_user " -p --password <password>			define the telnet password.\n"
 				send_user " -s --secretpassword <enable password>		define the enable secret password.\n"
 				send_user " -t --target <host>				define the hostname to connect.\n"
 				send_user " -T --targetfile <file>				define a target file (one host per line)\n"
