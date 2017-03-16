@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env expect
 #
 # ciscocmd expect script
 #
@@ -74,21 +74,11 @@
 # Some code modified to check CYGWIN platform
 # New way to load tclx without specify the path :-)
 
-# The next line store the args in memory \
-IFS='µ' ; export ARGS="$*"
-# the next line restarts using expect \
-exec expect  -- "$0" 
-
 match_max 20
 set FORK 0
 log_user 0
-# first: take arguments from environment variable
 
-regsub -all -- "{|}" [lrange [array get env ARGS] 1 end] "" argv
-regsub -all -- "µ" $argv "\" \"" argv
-regsub -all -- "^|$" $argv "\"" argv
-
-if { $argv == "" || $argv == "\""} {
+if {[llength $argv] == 0} {
 	set argv "-h"
 }
 
@@ -114,176 +104,171 @@ set cyg 0
 # Trap for Cygwin 
 
 if { [ regexp {CYGWIN} [array get tcl_platform os]  ] } {
-        trap SIG_IGN SIGCHLD
+	trap SIG_IGN SIGCHLD
 	set cyg 1
 }
-# Argument processing
 
+# Argument processing
 while {[llength $argv] > 0 } {
 	set flag [lindex $argv 0]
 	switch -re -- $flag {
-		"--help|^-h$"		{
-				send_user "ciscocmd v1.11 written by Alain Degreffe <eczema@ecze.com>\n\n"
-				send_user "Usage: ciscocmd \[OPTION\]...\n"
-				send_user "Send command(s) to cisco host.\n\n" 
-				send_user " -h --help display this help message.\n"
-				send_user " -u --username <username>			define the username password.\n"
-				send_user " -p --password <password>		 	define the telnet password.\n"
-				send_user " -s --secretpassword <enable password>		define the enable secret password.\n"
-				send_user " -t --target <host>				define the hostname to connect.\n"
-				send_user " -T --targetfile <file>				define a target file (one host per line)\n"
-				send_user " -c --cmd <cmd>					define the command to send.\n"
-				send_user " -e --enable					set mode enable.\n"
-				send_user " -C --cachecred					use cache credentials \$CISCOUSR \$CISCOPW \$CISCOSEC\n"
-				send_user " -r --runfile <file>				define a file with a set of command to send.\n"
-				send_user " -l --log <file prefix>				define a logfile prefix\n"
-				send_user " -a --append					log will be appended to existing file\n" 
-				send_user " -P --prefix					add the host prefix to each line\n"
-				send_user " -m --maxfork <number>				define maximum forked process\n"
-				send_user " -w --wait <seconds>				define max wait time for the next prompt\n"
-				send_user " -b --batchfile <file>				define a batch file to process ciscocmd output\n"
-				send_user "						All ciscocmd output will be piped to this batch\n"
-				send_user " -Y --ssh					Use ssh protocol to connect remote equipement\n"
-                                send_user " --sshopts					set ssh specific option\n"
-				send_user " -I --ignrorekey				ignore host key for ssh protocol\n"
-                                send_user " -f --force					force connection to next host if one connection fails\n"
-				send_user " -d --debug <file>				define a debug file name\n"
-				send_user " -A --asa					use ASA pager command: terminal pager 0\n"
-				send_user " -W --wlc					use WLC pager command: config paging disable\n"
-				send_user " -D --datadump					use Small Business pager command: terminal datadump 0\n"
-				send_user " -z --width <chars>				set terminal width (not for ASA or WLC)\n"
-				send_user " -q --quiet					set program very quiet\n\n"
-				set argv [lrange $argv 1 end]
-				exit
-				}
-		"--username|-u" 	{
-                                set username [lindex $argv 1]
-                                set argv [lrange $argv 2 end]
-				}
-
-		"--password|-p" 	{
-				set password [lindex $argv 1]
-				set argv [lrange $argv 2 end]
-			     	}
-		"--secretpassword|^-s$"	{
-                                set secretpassword [lindex $argv 1]
-                                set argv [lrange $argv 2 end]
-				}
-		"--target|-t"		{
-                                set target [lindex $argv 1]
-                                set argv [lrange $argv 2 end]
-				}
-		"--targetfile|-T"	{
-				set targetfile [lindex $argv 1]
-				set argv [lrange $argv 2 end]
-				}
-		"--cmd|-c"		{
-                                set command [lindex $argv 1]
-                                set argv [lrange $argv 2 end]
-				}
-		"--cachecred|-C"	
-					{
-				catch { set username $::env(CISCOUSR) }
-				catch { set password $::env(CISCOPW) }
-				catch { set secretpassword  $::env(CISCOSEC) }
-				set argv [lrange $argv 1 end]
-				}
-		"--runfile|-r"		{
-                                set cmdfile [lindex $argv 1]
-				if { $cmdfile == "" } { unset cmdfile }
-                                set argv [lrange $argv 2 end]
-				}
-		"--log|-l"		{
-				set logfile [lindex $argv 1]
-				set argv [lrange $argv 2 end]
-				}
-		"--enable|-e$"		{
-				set enable 1
-				set argv [lrange $argv 1 end]
-				}
-		"--prefix|-P"		{
-				set prefix 1
-				set argv [lrange $argv 1 end]
-				}
-		"--maxfork|-m"		{
-				set maxfork [lindex $argv 1]
-				set argv [lrange $argv 2 end]
-				}
-		"--wait|-w"		{
-				set timeout [lindex $argv 1]
-				set argv [lrange $argv 2 end]
-				}
-		"--batchfile|-b"	{
-				set batch [lindex $argv 1]
-				set argv [lrange $argv 2 end]
-				}
-		"--append|-a"		{
+		"--help|^-h$" {
+			send_user "ciscocmd v1.11 written by Alain Degreffe <eczema@ecze.com>\n\n"
+			send_user "Usage: ciscocmd \[OPTION\]...\n"
+			send_user "Send command(s) to cisco host.\n\n"
+			send_user " -h --help display this help message.\n"
+			send_user " -u --username <username>                 define the username password.\n"
+			send_user " -p --password <password>                 define the telnet password.\n"
+			send_user " -s --secretpassword <enable password>    define the enable secret password.\n"
+			send_user " -t --target <host>                       define the hostname to connect.\n"
+			send_user " -T --targetfile <file>                   define a target file (one host per line)\n"
+			send_user " -c --cmd <cmd>                           define the command to send.\n"
+			send_user " -e --enable                              set mode enable.\n"
+			send_user " -C --cachecred                           use cache credentials \$CISCOUSR \$CISCOPW \$CISCOSEC\n"
+			send_user " -r --runfile <file>                      define a file with a set of command to send.\n"
+			send_user " -l --log <file prefix>                   define a logfile prefix\n"
+			send_user " -a --append                              log will be appended to existing file\n"
+			send_user " -P --prefix                              add the host prefix to each line\n"
+			send_user " -m --maxfork <number>                    define maximum forked process\n"
+			send_user " -w --wait <seconds>                      define max wait time for the next prompt\n"
+			send_user " -b --batchfile <file>                    define a batch file to process ciscocmd output\n"
+			send_user "                                          all ciscocmd output will be piped to this batch\n"
+			send_user " -Y --ssh                                 use ssh protocol to connect remote equipement\n"
+			send_user " --sshopts                                set ssh specific option\n"
+			send_user " -I --ignrorekey                          ignore host key for ssh protocol\n"
+			send_user " -f --force                               force connection to next host if one connection fails\n"
+			send_user " -d --debug <file>                        define a debug file name\n"
+			send_user " -A --asa                                 use ASA pager command: terminal pager 0\n"
+			send_user " -W --wlc                                 use WLC pager command: config paging disable\n"
+			send_user " -D --datadump                            use Small Business pager command: terminal datadump 0\n"
+			send_user " -z --width <chars>                       set terminal width (not for ASA or WLC)\n"
+			send_user " -q --quiet                               set program very quiet\n\n"
+			set argv [lrange $argv 1 end]
+			exit
+		}
+		"--username|-u" {
+			set username [lindex $argv 1]
+			set argv [lrange $argv 2 end]
+		}
+		"--password|-p" {
+			set password [lindex $argv 1]
+			set argv [lrange $argv 2 end]
+		}
+		"--secretpassword|^-s$" {
+			set secretpassword [lindex $argv 1]
+			set argv [lrange $argv 2 end]
+		}
+		"--target|-t" {
+			set target [lindex $argv 1]
+			set argv [lrange $argv 2 end]
+		}
+		"--targetfile|-T" {
+			set targetfile [lindex $argv 1]
+			set argv [lrange $argv 2 end]
+		}
+		"--cmd|-c" {
+			set command [lindex $argv 1]
+			set argv [lrange $argv 2 end]
+		}
+		"--cachecred|-C" {
+			catch { set username $::env(CISCOUSR) }
+			catch { set password $::env(CISCOPW) }
+			catch { set secretpassword  $::env(CISCOSEC) }
+			set argv [lrange $argv 1 end]
+		}
+		"--runfile|-r" {
+			set cmdfile [lindex $argv 1]
+			if { $cmdfile == "" } { unset cmdfile }
+			set argv [lrange $argv 2 end]
+		}
+		"--log|-l" {
+			set logfile [lindex $argv 1]
+			set argv [lrange $argv 2 end]
+		}
+		"--enable|-e$" {
+			set enable 1
+			set argv [lrange $argv 1 end]
+		}
+		"--prefix|-P" {
+			set prefix 1
+			set argv [lrange $argv 1 end]
+		}
+		"--maxfork|-m" {
+			set maxfork [lindex $argv 1]
+			set argv [lrange $argv 2 end]
+		}
+		"--wait|-w" {
+			set timeout [lindex $argv 1]
+			set argv [lrange $argv 2 end]
+		}
+		"--batchfile|-b" {
+			set batch [lindex $argv 1]
+			set argv [lrange $argv 2 end]
+		}
+		"--append|-a" {
 				set aplog 1
 				set argv [lrange $argv 1 end]
-				}
-		"--quiet|-q"		{
-				set quiet 1
-				set argv [lrange $argv 1 end]
-				}
-		"^--ssh$|-Y"			{
-				set proto "ssh"
-				set argv [lrange $argv 1 end]
-				}
-                "^--sshopts"            {
-                                set sshopts [lindex $argv 1]
-                                set argv [lrange $argv 2 end]
-                                }
-		"^--ignorekey|-I"		{
-				if { $cyg == 0 } {
-						set sshopts  "$sshopts -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-					} else {
-						set sshopts  "$sshopts -o StrictHostKeyChecking=no -o UserKnownHostsFile=NULL"
-					}
-				set argv [lrange $argv 1 end]
-				}
-
-                "--force|-f"            {
-                                set forcenext 1
-                                set argv [lrange $argv 1 end]
-                                }
-
-		"^--asa$|-A"			{
+		}
+		"--quiet|-q" {
+			set quiet 1
+			set argv [lrange $argv 1 end]
+		}
+		"^--ssh$|-Y" {
+			set proto "ssh"
+			set argv [lrange $argv 1 end]
+		}
+		"^--sshopts" {
+			set sshopts [lindex $argv 1]
+			set argv [lrange $argv 2 end]
+		}
+		"^--ignorekey|-I" {
+			if { $cyg == 0 } {
+				set sshopts  "$sshopts -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+			} else {
+				set sshopts  "$sshopts -o StrictHostKeyChecking=no -o UserKnownHostsFile=NULL"
+			}
+			set argv [lrange $argv 1 end]
+		}
+		"--force|-f" {
+			set forcenext 1
+			set argv [lrange $argv 1 end]
+		}
+		"^--asa$|-A" {
 				set termlen "terminal pager 0"
 				set termwidth ""
 				set argv [lrange $argv 1 end]
-				}
-		"^--wlc$|-W"			{
-				set termlen "config paging disable"
-				set termwidth ""
-				set argv [lrange $argv 1 end]
-				}
-		"^--datadump$|^-D$"			{
-				set termlen "terminal datadump"
-				set termwidth ""
-				set argv [lrange $argv 1 end]
-				}
-		"^--width$|-z"			{
-				set width [lindex $argv 1]
-				set argv [lrange $argv 2 end]
-				}
-		"--debug|-d"		{
-				set debugfile [lindex $argv 1]
-				#exp_internal -f $debugfile 0
-				set argv [lrange $argv 2 end]
-				}
-		default 		{
-				send_user " \n$flag unknow argument.\n\n"
-				set argv "-h"
-				}
+		}
+		"^--wlc$|-W" {
+			set termlen "config paging disable"
+			set termwidth ""
+			set argv [lrange $argv 1 end]
+		}
+		"^--datadump$|^-D$" {
+			set termlen "terminal datadump"
+			set termwidth ""
+			set argv [lrange $argv 1 end]
+		}
+		"^--width$|-z" {
+			set width [lindex $argv 1]
+			set argv [lrange $argv 2 end]
+		}
+		"--debug|-d" {
+			set debugfile [lindex $argv 1]
+			#exp_internal -f $debugfile 0
+			set argv [lrange $argv 2 end]
+		}
+		default {
+			send_user " \n$flag unknow argument.\n\n"
+			set argv "-h"
+		}
 	}
 }
 
-
-#  tclx under unixes required to fork 
+# tclx under unixes required to fork
 if { $cyg == 0 } {
-      if { [catch {package require Tclx} ] } {
-           set maxfork 0
-      }
+	if { [catch {package require Tclx} ] } {
+		set maxfork 0
+	}
 }
 
 # Procedure varcheck
@@ -305,8 +290,6 @@ proc varcheck { var hide } {
 		send_user "\n"
 	}
 }
-	
-
 
 # Procedure waitprompt
 #
@@ -314,12 +297,11 @@ proc varcheck { var hide } {
 #
 #
 
-
 proc waitprompt {} {
-        global logfd
-        global host
-        global logger
-        global prefix
+	global logfd
+	global host
+	global logger
+	global prefix
 	global continuousprompt
 	global macro
 	set nl 0
@@ -327,7 +309,7 @@ proc waitprompt {} {
 	if { $macro == 1 } {
 		expect {
 			-re "\n" {
-				set macro 1	
+				set macro 1
 			}
 			-re "@\n" {
 				set macro 0
@@ -337,7 +319,7 @@ proc waitprompt {} {
 		expect {
 			-re "'@'\.\r\n" {
 				set macro 1
-				if   { [ info exist logfd  ] && $logger == 1 } {
+				if { [ info exist logfd  ] && $logger == 1 } {
 					regsub -all -- "^G" $expect_out(buffer) "" add
 					puts -nonewline $logfd  "$beg$add"
 				}
@@ -350,25 +332,25 @@ proc waitprompt {} {
 				set continuousprompt "1"
 			}
 			-re "\n" {
-                       		if   { [ info exist logfd  ] && $logger == 1 }  {
+				if { [ info exist logfd  ] && $logger == 1 } {
 					regsub -all -- "" $expect_out(buffer) "" add
-                               		puts -nonewline $logfd  "$beg$add"
-                        	}
+					puts -nonewline $logfd  "$beg$add"
+				}
 				set nl [ expr $nl + 1 ]
 				if { $nl > 20 } { send "" ; set nl 0 }
 				if { $continuousprompt == "0" } { exp_continue }
 			}
 			-re "enable\\) \*$|> *\*$|admin:\\**\*$|assword: \*$|\\$ \*$|ser(name)?: \*$|confirm\]\*$|y/n\] :\*$|\\? *\*$" {
 				set continuousprompt "0"
-				if   { [ info exist logfd  ] && $logger == 1 } {
+				if { [ info exist logfd  ] && $logger == 1 } {
 					regsub -all -- "" $expect_out(buffer) "" add
-                               		puts -nonewline $logfd  "$beg$add"
-                        	}
+					puts -nonewline $logfd  "$beg$add"
+				}
 				return 2
 			}
-		 	-re "^\[^ \]+# *\*$" {
+			-re "^\[^ \]+# *\*$" {
 				set continuousprompt "0"
-				if   { [ info exist logfd  ] && $logger == 1 } {
+				if { [ info exist logfd  ] && $logger == 1 } {
 					regsub -all -- "" $expect_out(buffer) "" add
 					puts -nonewline $logfd  "$beg$add"
 				}
@@ -376,22 +358,19 @@ proc waitprompt {} {
 			}
 		}
 	}
- 
-
 }
 
 ## Now multitasking if more than one host
 
-
 if { $proto == "ssh" } {
-                varcheck "username" 0
-		}
+	varcheck "username" 0
+}
+
 varcheck "password" 1
 
 if { [ info exist enable ] } {
-		varcheck "secretpassword" 1
-		}
-
+	varcheck "secretpassword" 1
+}
 
 # Construct a list
 
@@ -405,13 +384,13 @@ if { [ info exist target ] } {
 			lappend hostlist $nexthost
 		}
 	}
-	
-} else { varcheck hostlist 0 }
+} else {
+	varcheck "hostlist" 0
+}
 
 # only one host ??
 
-
-if { [ llength $hostlist ] < 2  ||  $maxfork < 2   } {
+if { [ llength $hostlist ] < 2 || $maxfork < 2 } {
 	# No need to fork
 } else {
 	# Multitask forking required
@@ -429,43 +408,40 @@ if { [ llength $hostlist ] < 2  ||  $maxfork < 2   } {
 		} else { 
 			# Parent part.
 			lappend children $child
-                        regsub -all -- "  *" [ concat $children ] "\ \\|\ " look
+			regsub -all -- "  *" [ concat $children ] "\ \\|\ " look
 			set childavail [ expr $childavail - 1 ]
 			while { $childavail == 0 } {
 				if { $cyg == 1 } {
-					if [ catch { set pslist [ exec ps -s | grep "\ $look" | grep -v defunc | wc -l  ] } ] { set pslist 0 }
+					if {[ catch { set pslist [ exec ps -s | grep "\ $look" | grep -v defunc | wc -l  ] } ]} { set pslist 0 }
 					set childavail [ expr $maxfork - $pslist  ]
 					sleep 1
 				} else {
-				tclx_wait 
+				tclx_wait
 				#wait -1
 				set childavail [ expr $childavail + 1 ]
 				}
 			}
 		}
-	} 
+	}
 	if { $child > 0 } {
 		while { $childavail < $maxfork } { 
 			regsub -all -- "  *" [ concat $children ] "\ \\|\ " look
 			if { $cyg == 1  } {
-				if [ catch { set pslist [ exec ps -s |  grep "\ $look" | grep -v defunc | wc -l ] } ] {  set pslist 0 }
+				if {[ catch { set pslist [ exec ps -s | grep "\ $look" | grep -v defunc | wc -l ] } ]} {  set pslist 0 }
 				set childavail [ expr $maxfork - $pslist  ]
 				sleep 1
 			} else {
 				tclx_wait
-				#wait -1
+#				wait -1
 				set childavail [ expr $childavail + 1 ]
 			}
-		#	exit
+#			exit
 		}
 		exit
-	} 
+	}
 }
 
-
-
 foreach host $hostlist {
-	
 	#####################
 	# Login to the host #
 	#####################
@@ -478,7 +454,6 @@ foreach host $hostlist {
 		}
 	}
 
-
 	# telnet 
 
 	# Stop output to stdout
@@ -490,83 +465,79 @@ foreach host $hostlist {
 
 	if { $proto == "ssh" } {
 		varcheck "username" 0
-		if [ catch { eval spawn  $proto $sshopts $username@$host } ] {send_user "$host failed to connect\n"} 
+		if {[ catch { eval spawn  $proto $sshopts $username@$host } ]} {send_user "$host failed to connect\n"}
 	} else {
-		if [ catch { eval spawn  $proto $host } ] {send_user "$host failed to connect\n"}
+		if {[ catch { eval spawn  $proto $host } ]} {send_user "$host failed to connect\n"}
 	}
-
 
 	catch { expect -re  "(assword)|(ser(name)?)|(yes/no)" }
-        if { [ catch { set loginbuf "$expect_out(0,string)" } ] } {
-        #       if { [ catch { set loginbuf "$expect_out(2,string)" } ] } {
-	#		set loginbuf "$expect_out(3,string)" 
-	#       }
-	#set loginbuf $expect_out(0,string)
-	send_user "$host failed to connect\n"
-	if { [info exist forcenext] } {
-		# force next host
-		continue
-        } else {
-		exit
-	}
-			
+	if { [ catch { set loginbuf "$expect_out(0,string)" } ] } {
+#		if { [ catch { set loginbuf "$expect_out(2,string)" } ] } {
+#			set loginbuf "$expect_out(3,string)"
+#		}
+		set loginbuf $expect_out(0,string)
+		send_user "$host failed to connect\n"
+		if { [info exist forcenext] } {
+			# force next host
+			continue
+		} else {
+			exit
+		}
 	}
 
 	switch -- $loginbuf {
-		"yes/no"	{
-				send  "yes\r"
-				expect -re "assword"
-				global password
-				varcheck "password" 1
-				send  "$password\r"
-				}
-        	"ser"	{
-                	        varcheck "username" 0
-                	        send  "$username\r"
-                	        expect -re "assword"
-                	        global password
-                	        varcheck "password" 1
-                	        send  "$password\r"
-                	        }
-       		"assword"       {
-                	        varcheck "password" 1
-                        	send  "$password\r"
-                        	}
-        	default         {
-                	        exit
-                        	}
+		"yes/no" {
+			send  "yes\r"
+			expect -re "assword"
+			global password
+			varcheck "password" 1
+			send  "$password\r"
+		}
+		"ser" {
+			varcheck "username" 0
+			send  "$username\r"
+			expect -re "assword"
+			global password
+			varcheck "password" 1
+			send  "$password\r"
+		}
+		"assword" {
+			varcheck "password" 1
+			send  "$password\r"
+		}
+		default {
+			exit
+		}
 	}
 
 	set ret [ waitprompt ]
 
-
 	if { $ret == 2 && ( [info exist secretpassword] || [info exist enable] ) } {
 		varcheck "secretpassword" 1
 		send  "en\r"
-	expect -re "(assword)|(#)" 	
-	set loginbuf2 "$expect_out(0,string)"
+		expect -re "(assword)|(#)"
+		set loginbuf2 "$expect_out(0,string)"
 		switch -- $loginbuf2 {
 			"#" {
 				send "\n"
-				}
+			}
 			"assword" {
 				send  "$secretpassword\r"
-				}
+			}
 		}
-	#	expect -re "assword"
-	#	send  "$secretpassword\r"
+#		expect -re "assword"
+#		send  "$secretpassword\r"
 		waitprompt
 	}
 
-	if [ catch { send  "$termlen\r" } ] {send_user "$host failed to connect\n" ; exit }  
+	if {[catch { send  "$termlen\r" }]} {send_user "$host failed to connect\n" ; exit }
 	waitprompt
 	if { $termwidth != "" } {
 		send "$termwidth $width\r"
 		waitprompt
 	}
 
-
-	##########################################	
+	##########################################
 	if { $FORK == 0  && ![ info exist quiet ] } { log_user 1 }
 
 	if { [ info exist batch ] } {
@@ -582,10 +553,10 @@ foreach host $hostlist {
 		set logfd [ open $logfile$host.txt "$ff"]
 		set logger 1
 	}
-	
-	##########################################
-	#	Core process			 #
-	##########################################
+
+	##################
+	#  Core process  #
+	##################
 
 	#learnprompt
 
@@ -601,14 +572,14 @@ foreach host $hostlist {
 			waitprompt
 		}
 	} else {
-		varcheck command 0
-                if [ catch { send "\r" } ] { continue }
-                if [ catch { waitprompt } ] { continue }
-                if [ catch { send "$command\r" } ]  { continue }
-                if [ catch { waitprompt } ] { continue }
+		varcheck "command" 0
+		if {[ catch { send "\r" } ]} { continue }
+		if {[ catch { waitprompt } ]} { continue }
+		if {[ catch { send "$command\r" } ]} { continue }
+		if {[ catch { waitprompt } ]} { continue }
 	}
-	
-	send "exit\r"	
+
+	send "exit\r"
 	close
 	##########################################
 
@@ -624,24 +595,24 @@ foreach host $hostlist {
 				system $cmd 
 			} else {
 				set cmd  "export CISCOHOST=$host;/bin/cat ./$logfile$host.txt.$tmp | $batch > ./$logfile$host.txt "
-				system $cmd 
+				system $cmd
 			}
 			file delete $logfile$host.txt.$tmp
 			if { $FORK == 1 && ![ info exist quiet ] } {
 				log_user 1
 				set logfd [ open $logfile$host.txt "r"]
 				while { ![eof $logfd] } {
-					set line [gets $logfd] 
+					set line [gets $logfd]
 					send_user -- "$line\n"
 				log_user 0
 				}
-			} 
+			}
 		}
 	}
-	
-	#Not needed under new Expect tcl 8.4
-	 if { $FORK == 1 && $cyg == 0  } {
-	# Needed for a bug in Tclx 8.4
+
+	# Not needed under new Expect tcl 8.4
+	if { $FORK == 1 && $cyg == 0  } {
+		# Needed for a bug in Tclx 8.4
 		execl true
 	}
 }
