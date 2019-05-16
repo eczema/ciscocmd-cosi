@@ -346,8 +346,11 @@ proc waitprompt {} {
 				disconnect
 				exit 1
 			}
-			-re "Enter TEXT message." {
+			-re "Enter TEXT message.| add a period.*$" {
 				set continuousprompt "1"
+			}
+			-re "successfully$" {
+				set continuousprompt "0"
 			}
 			-re "\n" {
                        		if   { [ info exist logfd  ] && $logger == 1 }  {
@@ -358,7 +361,7 @@ proc waitprompt {} {
 				if { $nl > 20 } { send "" ; set nl 0 }
 				if { $continuousprompt == "0" } { exp_continue }
 			}
-			-re "enable\\) \*$|> *\*$|admin:\\**\*$|assword: \*$|\\$ \*$|ser(name)?: \*$|confirm\]\*$|y/n\] :\*$|\\? *\*$" {
+			-re "enable\\) \*$|> *\*$|admin:\\**\*$|assword: \*$|\\$ \*$|ser(name)?: \*$|confirm\]\*$|y/n\] :\*$|\\(Y/N\\).*(\\?| )|\\? \[Y/N\]|\\? *\*$" {
 				set continuousprompt "0"
 				if   { [ info exist logfd  ] && $logger == 1 } {
 					regsub -all -- "" $expect_out(buffer) "" add
@@ -518,19 +521,19 @@ foreach host $hostlist {
 				expect -re "assword"
 				global password
 				varcheck "password" 1
-				send  "$password\r"
+				send -- "$password\r"
 				}
         	"ser"	{
                 	        varcheck "username" 0
-                	        send  "$username\r"
+                	        send -- "$username\r"
                 	        expect -re "assword"
                 	        global password
                 	        varcheck "password" 1
-                	        send  "$password\r"
+                	        send -- "$password\r"
                 	        }
        		"assword"       {
                 	        varcheck "password" 1
-                        	send  "$password\r"
+                        	send -- "$password\r"
                         	}
         	default         {
                 	        exit
@@ -550,18 +553,18 @@ foreach host $hostlist {
 				send "\n"
 				}
 			"assword" {
-				send  "$secretpassword\r"
+				send -- "$secretpassword\r"
 				}
 		}
 	#	expect -re "assword"
-	#	send  "$secretpassword\r"
+	#	send -- "$secretpassword\r"
 		waitprompt
 	}
 
-	if [ catch { send  "$termlen\r" } ] {send_user "$host failed to connect\n" ; exit }  
+	if [ catch { send -- "$termlen\r" } ] {send_user "$host failed to connect\n" ; exit }
 	waitprompt
 	if { $termwidth != "" } {
-		send "$termwidth $width\r"
+		send -- "$termwidth $width\r"
 		waitprompt
 	}
 
@@ -597,14 +600,15 @@ foreach host $hostlist {
 		set cmdlist [open $cmdfile "r" ]
 		while {[eof $cmdlist] == 0} {
 			set command [gets $cmdlist]
-			send "$command\r"
+			if { $command == "." } { set continuousprompt "0" }
+			send -- "$command\r"
 			waitprompt
 		}
 	} else {
 		varcheck command 0
                 if [ catch { send "\r" } ] { continue }
                 if [ catch { waitprompt } ] { continue }
-                if [ catch { send "$command\r" } ]  { continue }
+                if [ catch { send -- "$command\r" } ]  { continue }
                 if [ catch { waitprompt } ] { continue }
 	}
 	
