@@ -358,7 +358,7 @@ proc waitprompt {} {
 				if { $nl > 20 } { send "" ; set nl 0 }
 				if { $continuousprompt == "0" } { exp_continue }
 			}
-			-re "enable\\) \*$|> *\*$|admin:\\**\*$|assword: \*$|\\$ \*$|ser(name)?: \*$|confirm\]\*$|y/n\] :\*$|\\? *\*$" {
+			-re "enable\\) \*$|> *\*$|admin:\\**\*$|assword: \*$|\\$ \*$|ser(name)?: \*$|confirm\]\*$|y/n\] :\*$|\\(Y/N\\).*(\\?| )|\\? \[Y/N\]|\\? *\*$" {
 				set continuousprompt "0"
 				if   { [ info exist logfd  ] && $logger == 1 } {
 					regsub -all -- "" $expect_out(buffer) "" add
