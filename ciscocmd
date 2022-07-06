@@ -229,6 +229,11 @@ while {[llength $argv] > 0 } {
 				set proto "ssh"
 				set argv [lrange $argv 1 end]
 				}
+				
+		"^--ssh1$|-y"			{
+				set proto "ssh1"
+				set argv [lrange $argv 1 end]
+				}
                 "^--sshopts"            {
                                 set sshopts [lindex $argv 1]
                                 set argv [lrange $argv 2 end]
