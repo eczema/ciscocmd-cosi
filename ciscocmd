@@ -74,6 +74,9 @@
 # Some code modified to check CYGWIN platform
 # New way to load tclx without specify the path :-)
 
+# V1.12
+# Add ssh1 retrocompatility for old embedded devices
+
 # The next line store the args in memory \
 IFS='µ' ; export ARGS="$*"
 # the next line restarts using expect \
@@ -144,6 +147,7 @@ while {[llength $argv] > 0 } {
 				send_user " -b --batchfile <file>				define a batch file to process ciscocmd output\n"
 				send_user "						All ciscocmd output will be piped to this batch\n"
 				send_user " -Y --ssh					Use ssh protocol to connect remote equipement\n"
+				send_user " -y --ssh1					Use ssh1 retrocompatibility protocol to connect remote equipement\n"
                                 send_user " --sshopts					set ssh specific option\n"
 				send_user " -I --ignrorekey				ignore host key for ssh protocol\n"
                                 send_user " -f --force					force connection to next host if one connection fails\n"
@@ -488,7 +492,7 @@ foreach host $hostlist {
 		log_user 0
 	}
 
-	if { $proto == "ssh" } {
+	if { $proto == "ssh" || $proto == 'ssh1' } {
 		varcheck "username" 0
 		if [ catch { eval spawn  $proto $sshopts $username@$host } ] {send_user "$host failed to connect\n"} 
 	} else {
